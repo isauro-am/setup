@@ -93,6 +93,11 @@ byobu-enable
 echo "Permitiendo acceso SSH al usuario root..."
 sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config
 
+# añadir linea al archivo nano /etc/ssh/sshd_config para permitir acceso root por password
+echo "Permitiendo acceso SSH al usuario root por contraseña..."
+echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+
+
 # Eliminar usuario deleteme
 echo "Eliminando usuario deleteme..."
 userdel -r deleteme
@@ -102,3 +107,7 @@ rm -rf /home/deleteme
 # Indicar al usuario que cierre las sesiones SSH
 echo "Por favor, cierre todas las sesiones SSH y vuelva a ingresar para aplicar los cambios."
 
+
+# Dar instrucciones para configurar el acceso por SSH mandando llave al servidor
+echo "Para configurar el acceso por SSH, ejecute el siguiente comando en su máquina local:"
+echo "ssh-copy-id -i ~/.ssh/id_rsa.pub root@$(curl -s ifconfig.me)"
