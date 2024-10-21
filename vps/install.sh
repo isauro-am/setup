@@ -111,3 +111,12 @@ echo "Por favor, cierre todas las sesiones SSH y vuelva a ingresar para aplicar 
 # Dar instrucciones para configurar el acceso por SSH mandando llave al servidor
 echo "Para configurar el acceso por SSH, ejecute el siguiente comando en su máquina local:"
 echo "ssh-copy-id -i ~/.ssh/id_rsa.pub root@$(curl -s ifconfig.me)"
+
+# Cambiar puerto SSH a 54322
+echo "Cambiando puerto SSH a 54322..."
+sed -i 's/#Port 22/Port 54322/' /etc/ssh/sshd_config
+
+# Reiniciar el servicio SSH
+echo "Reiniciando el servicio SSH..."
+systemctl restart ssh
+
