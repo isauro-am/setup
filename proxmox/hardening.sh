@@ -121,4 +121,9 @@ export EDITOR="nano"
 export VISUAL=nano
 EOL
 
+# Deshabilitar y rehabilitar byobu para que se apliquen los cambios
+echo "Reiniciando byobu..."
+byobu-disable
+byobu-enable
+
 echo "Configuración finalizada"
