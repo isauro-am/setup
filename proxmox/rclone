@@ -1,0 +1,19 @@
+curl https://rclone.org/install.sh | bash
+
+Configuración:
+	• Copiar el contenido de la Nota segura (LastPass) "imagesMB" al archivo /root/.config/rclone/rclone.conf
+	
+	• Crear directorio en Drive destinado para el servidor.
+		rclone mkdir imagesMB:images_microbit/<nombre_proxmox>
+	
+	• Crear script para ejecutar rclone copiando lo siguiente al archivo /root/rclone-cron.sh y brindar permisos de ejecución.
+		#! /bin/bash
+		
+		if pidof -o %PPID -x "rclone-cron.sh"; then
+		exit 1
+		fi
+		/usr/bin/rclone sync /var/lib/vz/backups/dump/ imagesMB:images_microbit/<nombre_proxmox> -v --log-file=/var/log/rclone_$(date +"%Y-%m-%d").log
+		exit
+	
+	• Agregar cronjob con hota y fechas para programar el envío (crontab -e)
+* * * * * /root/rclone-cron.sh >/dev/null 2>&1
