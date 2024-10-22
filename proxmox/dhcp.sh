@@ -51,11 +51,35 @@ iface $BRIDGE_NAME inet static
     post-up echo 1 > /proc/sys/net/ipv4/ip_forward
     post-up iptables -t nat -A POSTROUTING -s 192.168.10.0/24 -o $BRIDGE_NAME -j MASQUERADE
     post-down iptables -t nat -D POSTROUTING -s 192.168.10.0/24 -o $BRIDGE_NAME -j MASQUERADE
+
+post-up echo 1 > /proc/sys/net/ipv4/ip_forward
+post-up iptables -t nat -A POSTROUTING -s 192.168.10.0/24 -o $BRIDGE_NAME -j MASQUERADE
+post-down iptables -t nat -D POSTROUTING -s 192.168.10.0/24 -o $BRIDGE_NAME -j MASQUERADE
+
 EOT
 
 # Cambiar la política de reenvío en UFW
 echo "Configurando UFW para permitir reenvío de paquetes..."
 sed -i 's/DEFAULT_FORWARD_POLICY="DROP"/DEFAULT_FORWARD_POLICY="ACCEPT"/' /etc/default/ufw
+
+# Revisar que si se ha habilitado el reenvío de paquetes
+echo "Revisando que se ha habilitado el reenvío de paquetes..."
+if [ $(cat /etc/default/ufw | grep "DEFAULT_FORWARD_POLICY=\"ACCEPT\"") ]; then
+    echo "El reenvío de paquetes está habilitado."
+else
+    echo "El reenvío de paquetes no está habilitado."
+    limit=0
+    while [ $limit -lt 3 ]; do
+        if [ $(cat /etc/default/ufw | grep "DEFAULT_FORWARD_POLICY=\"ACCEPT\"") ]; then
+            echo "El reenvío de paquetes está habilitado."
+            break
+        else
+            echo "El reenvío de paquetes no está habilitado."
+            limit=$((limit+1))
+        fi
+    done
+fi
+
 
 # Reiniciar UFW para aplicar los cambios
 echo "Reiniciando UFW..."
