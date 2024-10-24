@@ -41,40 +41,8 @@ function get_free_swap_percentage() {
 
 function restart_swap() {
 
-    # Get the current swap size in gigabytes, rounded to the nearest integer
-    current_swap_size=$(free | grep Swap | awk '{printf "%.0f", $2 / 1024 / 1024}')
-    
-    # Get the available disk space in the filesystem where the swap file will be created (for example, in /)
-    available_disk_space=$(df --output=avail / | tail -n 1 | awk '{print $1 / 1024 / 1024}')  # Convert to GB
-    
-    echo "Available disk space: $available_disk_space GB"
-    echo "Current swap size: $current_swap_size GB"
-
-    # Verify if there is enough disk space to create the temporary swap file
-    if (( $(echo "$available_disk_space > $current_swap_size + 1" | bc -l) )); then
-        echo "There is enough disk space to create the temporary swap file."
-        
-        # Create a temporary swap file of size (current_swap_size + 1) GB
-        fallocate -l $(($current_swap_size + 1))G /swapfile2
-        chmod 600 /swapfile2
-        mkswap /swapfile2
-        swapon /swapfile2
-
-        # Wait 10 seconds for the temporary swap to be in use
-        sleep 10
-
-        # Clean the real swap
         swapoff /swapfile
         swapon /swapfile
-
-        # Delete the temporary swap file
-        swapoff /swapfile2
-        rm -f /swapfile2
-    else
-        echo "There is not enough disk space to create the temporary swap file."
-        swapoff /swapfile
-        swapon /swapfile
-    fi
 }
 
 
