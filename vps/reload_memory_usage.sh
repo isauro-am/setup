@@ -16,22 +16,30 @@ fi
 
 function get_free_memory_percentage() {
 
-    total_ram_gb=$(free -h --si | grep Mem | awk '{print $2}' | sed 's/G//')
-    available_ram_gb=$(free -h --si | grep Mem | awk '{print $7}' | sed 's/G//')
-
-    free_ram_percentage=$(awk "BEGIN {if ($total_ram_gb > 0) printf \"%.2f\", $available_ram_gb / $total_ram_gb * 100; else print \"0\"}")
-
+    # Get free memory percentage rounded to 2 decimal places
+    free_ram_percentage=$(free -m | awk '/Mem:/ {print $7/$2 * 100}' | bc | awk '{printf "%.2f", $1}')
     echo "$free_ram_percentage"
 
 }
 
 function get_free_swap_percentage() {
 
-    total_swap_gb=$(free -h --si | grep Swap | awk '{print $2}' | sed 's/G//')
-    used_swap_gb=$(free -h --si | grep Swap | awk '{print $3}' | sed 's/G//')
+    # Get total and used swap in MB
+    total_swap=$(free -m | awk '/Swap:/ {print $2}')
+    used_swap=$(free -m | awk '/Swap:/ {print $3}')
 
-    free_swap_percentage=$(awk "BEGIN {if ($total_swap_gb > 0) printf \"%.2f\", ($total_swap_gb - $used_swap_gb) / $total_swap_gb * 100; else print \"0\"}")
+    # Convert to GB
+    total_swap_gb=$(echo "scale=2; $total_swap / 1024" | bc)
+    used_swap_gb=$(echo "scale=2; $used_swap / 1024" | bc)
 
+    # Calculate free swap percentage
+    if (( $(echo "$total_swap_gb > 0" | bc -l) )); then
+        free_swap_percentage=$(echo "scale=2; ($total_swap_gb - $used_swap_gb) / $total_swap_gb * 100" | bc)
+    else
+        free_swap_percentage=0
+    fi
+
+    # Show free swap percentage
     echo "$free_swap_percentage"
 
 }
@@ -43,12 +51,12 @@ free_swap_percentage=$(get_free_swap_percentage)
 
 # Verify if the variables are numeric before continuing
 if ! [[ "$free_ram_percentage" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-    echo "Error: free_ram_percentage is not a valid number."
+    echo "Error: free_ram_percentage is not a valid number.  $free_ram_percentage"
     exit 1
 fi
 
 if ! [[ "$free_swap_percentage" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-    echo "Error: free_swap_percentage is not a valid number."
+    echo "Error: free_swap_percentage is not a valid number.  $free_swap_percentage"
     exit 1
 fi
 
@@ -69,10 +77,17 @@ if (( $(awk "BEGIN {print ($free_ram_percentage < 10)}") )); then
 fi
 
 
-mysql_installed=$(dpkg -l | grep mysql-server)
 
-# If MySQL is installed, try to start it 5 times if it is not running
-if [[ -n "$mysql_installed" ]]; then
+mysql_installed=false
+
+# Verificar si hay algún motor de base de datos instalado
+if dpkg -l | grep -E 'mysql-server|mariadb-server|postgresql' >/dev/null 2>&1; then
+    installed=true
+fi
+
+if $mysql_installed; then
+
+    echo "$(date): [ MySQL ] MySQL is installed"
 
     for i in {1..5}; do
         if systemctl is-active --quiet mysql; then
