@@ -82,12 +82,10 @@ mysql_installed=false
 
 # Verificar si hay algún motor de base de datos instalado
 if dpkg -l | grep -E 'mysql-server|mariadb-server|postgresql' >/dev/null 2>&1; then
-    installed=true
+    mysql_installed=true
 fi
 
-if $mysql_installed; then
-
-    echo "$(date): [ MySQL ] MySQL is installed"
+if $mysql_installed == true; then
 
     for i in {1..5}; do
         if systemctl is-active --quiet mysql; then
