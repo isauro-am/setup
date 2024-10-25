@@ -89,7 +89,10 @@ if $mysql_installed == true; then
 
     for i in {1..5}; do
         if systemctl is-active --quiet mysql; then
-            echo "$(date): [ MySQL ] MySQL is running" >> /var/log/reload_memory_usage.log
+
+            if [ $i -gt 1 ]; then
+                echo "$(date): [ MySQL ] MySQL is running" >> /var/log/reload_memory_usage.log
+            fi
             break
         fi
 
